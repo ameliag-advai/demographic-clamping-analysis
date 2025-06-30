@@ -210,9 +210,12 @@ def run_prompt(prompt, model, sae, clamping, clamp_features, clamp_value, thresh
         #sae_output["top5_active_features"] = top5_active_features
 
         # Add activations and active features to output
-        sae_output = {}
-        for i in range(sae_activations.shape[0]):
-            sae_output[f"activation_{i}"] = sae_activations[i].item()
+        # Get active features and count them
+        active_features = (sae_activations > threshold).nonzero(as_tuple=True)[0]
+        n_active_features = active_features.shape[0]
+
+        # Temporarily reduce output for debugging
+        sae_output = {"n_active_features": n_active_features}
 
         #for i in range(active_features.shape[0]):
         #    sae_output[f"active_feature_{i}"] = active_features[i].item()
