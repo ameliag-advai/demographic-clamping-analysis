@@ -360,43 +360,42 @@ def save_results(results: List[Dict], activations_list: List[List], output_dir: 
     
     return results_file, activations_file, summary_file
 
-def main():
-    parser = argparse.ArgumentParser(description="Production Bias Analysis with Validated Features")
-    parser.add_argument("--patient-file", type=str, required=True, help="Path to patient data CSV")
-    parser.add_argument("--conditions-file", type=str, required=True, help="Path to conditions mapping JSON")
-    parser.add_argument("--num-cases", type=int, default=100, help="Number of cases to process")
-    parser.add_argument("--device", type=str, default="cpu", help="Device to use (cpu/cuda)")
-    parser.add_argument("--output-dir", type=str, default=None, help="Output directory")
-    
-    args = parser.parse_args()
+def main(patient_file: str, conditions_file: str, num_cases: int = 100, device: str = 'cpu', 
+         skip_cases: int = 0, batch_id: int = 1, output_suffix: str = ''):
+    """Main function to run the production bias experiment."""
+    print(f"🚀 Starting Production Bias Analysis - Batch {batch_id}")
     
     # Setup output directory
-    if args.output_dir:
-        output_dir = args.output_dir
-    else:
-        output_dir = os.path.join(PROJECT_ROOT, "src", "advai", "outputs")
-    
+    output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    print("🚀 Starting Production Bias Analysis")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if output_suffix:
+        timestamp = f"{timestamp}_{output_suffix}"
+    
     print(f"📁 Output directory: {output_dir}")
     print(f"🕒 Timestamp: {timestamp}")
+    print(f"📊 Processing {num_cases} cases (skipping first {skip_cases})")
     
     # Load model and SAE
     print("🔄 Loading model and SAE...")
-    model, sae = load_model_and_sae(device=args.device)
-    print(f"✅ Model loaded on {args.device}")
+    model, sae = load_model_and_sae(device=device)
+    print(f"✅ Model loaded on {device}")
     
     # Load data
     print("📊 Loading patient data...")
-    patient_data = load_patient_data(args.patient_file)
-    conditions_mapping = load_conditions_mapping(args.conditions_file)
+    patient_data = load_patient_data(patient_file)
+    conditions_mapping = load_conditions_mapping(conditions_file)
     print(f"✅ Loaded {len(patient_data)} patients")
+    
+    # Apply skip and limit for batch processing
+    if skip_cases > 0:
+        patient_data = patient_data.iloc[skip_cases:]
+        print(f"⏭️ Skipped first {skip_cases} cases")
     
     # Generate scenarios
     print("🎯 Generating test scenarios...")
-    scenarios = generate_scenarios(patient_data, args.num_cases)
+    scenarios = generate_scenarios(patient_data, num_cases)
     
     # Run experiments
     print(f"🧪 Running {len(scenarios)} experiments...")

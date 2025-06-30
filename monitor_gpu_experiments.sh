@@ -18,22 +18,22 @@ tmux list-sessions 2>/dev/null | grep -E "batch[1-3]" || echo "  No batch sessio
 echo ""
 
 echo "📁 Output Files:"
-if ls src/advai/outputs/*batch*_results_*.csv 1> /dev/null 2>&1; then
+if ls outputs/*batch*_results_*.csv 1> /dev/null 2>&1; then
     echo "  Results files:"
-    ls -lh src/advai/outputs/*batch*_results_*.csv | awk '{print "    " $9 " (" $5 ")"}'
+    ls -lh outputs/*batch*_results_*.csv | awk '{print "    " $9 " (" $5 ")"}'
 else
     echo "  No result files found yet"
 fi
 
-if ls src/advai/outputs/*batch*_activations_*.csv 1> /dev/null 2>&1; then
+if ls outputs/*batch*_activations_*.csv 1> /dev/null 2>&1; then
     echo "  Activation files:"
-    ls -lh src/advai/outputs/*batch*_activations_*.csv | awk '{print "    " $9 " (" $5 ")"}'
+    ls -lh outputs/*batch*_activations_*.csv | awk '{print "    " $9 " (" $5 ")"}'
 fi
 echo ""
 
 echo "💾 Storage Usage:"
-if [ -d "src/advai/outputs" ]; then
-    du -sh src/advai/outputs/ | awk '{print "  Total: " $1}'
+if [ -d "outputs" ]; then
+    du -sh outputs/ | awk '{print "  Total: " $1}'
 else
     echo "  Output directory not found"
 fi

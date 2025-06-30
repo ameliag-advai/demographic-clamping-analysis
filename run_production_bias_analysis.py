@@ -19,13 +19,22 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Run Production Bias Analysis")
     parser.add_argument("--num-cases", type=int, default=100, help="Number of cases to process")
-    parser.add_argument("--device", type=str, default="cpu", help="Device to use")
+    parser.add_argument("--skip-cases", type=int, default=0, help="Number of cases to skip (for batch processing)")
+    parser.add_argument("--device", type=str, default="cpu", help="Device to use (cuda/cpu/mps)")
+    parser.add_argument("--batch-id", type=int, default=1, help="Batch ID for parallel processing")
+    parser.add_argument("--output-suffix", type=str, default="", help="Suffix for output files")
+    parser.add_argument("--patient-data", type=str, 
+                       default="release-test-patients-age-grouped.csv",
+                       help="Path to patient data CSV")
+    parser.add_argument("--conditions", type=str,
+                       default="release_conditions.json", 
+                       help="Path to conditions JSON")
     
     args = parser.parse_args()
     
     # Use the available data files
-    patient_file = "/Users/amelia/demographic-clamping-analysis/release-test-patients-age-grouped.csv"
-    conditions_file = "/Users/amelia/demographic-clamping-analysis/release_conditions.json"
+    patient_file = args.patient_data
+    conditions_file = args.conditions
     
     # Check if files exist
     if not os.path.exists(patient_file):
@@ -44,12 +53,20 @@ if __name__ == "__main__":
         "--patient-file", patient_file,
         "--conditions-file", conditions_file,
         "--num-cases", str(args.num_cases),
-        "--device", args.device
+        "--skip-cases", str(args.skip_cases),
+        "--device", args.device,
+        "--batch-id", str(args.batch_id),
+        "--output-suffix", args.output_suffix
     ]
     
     print("🚀 Starting production bias analysis with alethia data...")
     print(f"📊 Processing {args.num_cases} cases on {args.device}")
+    if args.skip_cases > 0:
+        print(f"⏭️ Skipping first {args.skip_cases} cases")
+    if args.batch_id > 1:
+        print(f"🔢 Batch ID: {args.batch_id}")
     print(f"📁 Patient data: {patient_file}")
     print(f"📁 Conditions: {conditions_file}")
     
-    main()
+    main(patient_file, conditions_file, args.num_cases, args.device, 
+         args.skip_cases, args.batch_id, args.output_suffix)
