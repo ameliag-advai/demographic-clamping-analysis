@@ -170,12 +170,29 @@ class DemographicClampingExperiment:
 
     def format_result(self, case_id, case, symptoms, prompt, diags, logits, **kwargs):
         base_result = {
-            "case_id": case_id, "dataset_age": case['age'], "dataset_sex": "female" if case['sex'] == "F" else "male", 
-            "dataset_symptoms": symptoms, "diagnosis": case['pathology'], "prompt": prompt,
-            "prompt_age": "", "prompt_sex": "", "features_clamped": "", "clamping_levels": "",
-            "diagnosis_1": diags[0], "diagnosis_2": diags[1], "diagnosis_3": diags[2], "diagnosis_4": diags[3], "diagnosis_5": diags[4],
-            "diagnosis_1_logits": logits[0], "diagnosis_2_logits": logits[1], "diagnosis_3_logits": logits[2], "diagnosis_4_logits": logits[3], "diagnosis_5_logits": logits[4],
-            "top5": diags, "top5_logits": logits, "n_active_features": self.get_active_features_count(prompt)
+            "case_id": case_id,
+            "dataset_age": case['age'],
+            "dataset_sex": "female" if case['sex'] == "F" else "male",
+            "features_clamped": "",
+            "clamping_levels": "",
+            "dataset_symptoms": symptoms,
+            "diagnosis": case['pathology'],
+            "prompt": prompt,
+            "prompt_age": "",
+            "prompt_sex": "",
+            "diagnosis_1": diags[0],
+            "diagnosis_2": diags[1],
+            "diagnosis_3": diags[2],
+            "diagnosis_4": diags[3],
+            "diagnosis_5": diags[4],
+            "diagnosis_1_logits": logits[0],
+            "diagnosis_2_logits": logits[1],
+            "diagnosis_3_logits": logits[2],
+            "diagnosis_4_logits": logits[3],
+            "diagnosis_5_logits": logits[4],
+            "top5": diags,
+            "top5_logits": logits,
+            "n_active_features": self.get_active_features_count(prompt)
         }
         base_result.update(kwargs)
         return base_result
