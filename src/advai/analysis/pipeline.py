@@ -5,6 +5,7 @@ import io
 import json
 import os
 import sys
+import pandas as pd  # for summary of results
 from tqdm import tqdm
 from typing import Tuple
 
@@ -256,7 +257,9 @@ def run_analysis_pipeline(
                 prompt_outputs[group]["case_id"] = idx
                 prompt_outputs[group]["dataset_age"] = age
                 prompt_outputs[group]["dataset_sex"] = sex
-                prompt_outputs[group]["dataset_symptoms"] = symptoms
+                # Convert symptom codes to natural language using evidences mapping
+                nl_symptoms = [evidences.get(code, code) for code in symptoms]
+                prompt_outputs[group]["dataset_symptoms"] = "; ".join(nl_symptoms)
                 prompt_outputs[group]["diagnosis"] = case.get("diagnosis", None)
 
                 # Add prompt-level fields to the output
@@ -307,4 +310,17 @@ def run_analysis_pipeline(
                         write_act_header = False
                     act_writer.writerow(act_row)
 
+    # Summarize accuracy and misclassifications
+    try:
+        df = pd.read_csv(results_csv_path)
+        total = len(df)
+        correct = df['correct_top1'].eq('Yes').sum()
+        print(f"Top-1 accuracy: {correct}/{total} ({correct/total*100:.2f}%)")
+        mis_df = df[df['correct_top1']=='No']
+        if not mis_df.empty:
+            print("Examples of misclassified cases:")
+            for _, row in mis_df.head(5).iterrows():
+                print(f"Case {row['case_id']}: true diagnosis '{row['diagnosis']}', predicted '{row['diagnosis_1']}'\. Symptoms: {row['dataset_symptoms']}")
+    except Exception as e:
+        print(f"Could not summarize results: {e}")
     return results_csv_path
