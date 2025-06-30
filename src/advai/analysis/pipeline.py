@@ -271,7 +271,14 @@ def run_analysis_pipeline(
                             codes = []
                 else:
                     codes = raw_symptoms
-                nl_symptoms = [evidences.get(code, {}).get("question_en", code) for code in codes]
+                nl_symptoms = []
+                for code in codes:
+                    if "_@_" in code:
+                        base, val_key = code.split("_@_")  # e.g., E_54 and V_112
+                        translation = evidences.get(base, {}).get("value_meaning", {}).get(val_key, {}).get("en", code)
+                    else:
+                        translation = evidences.get(code, {}).get("question_en", code)
+                    nl_symptoms.append(translation)
                 prompt_outputs[group]["dataset_symptoms"] = "; ".join(nl_symptoms)
                 prompt_outputs[group]["diagnosis"] = case.get("diagnosis", None)
 
