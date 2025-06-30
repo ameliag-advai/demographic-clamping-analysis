@@ -206,7 +206,9 @@ class DemographicClampingExperiment:
             "diagnosis_5_logits": logits[4],
             "top5": diags,
             "top5_logits": logits,
-            "n_active_features": self.get_active_features_count(prompt)
+            "n_active_features": self.get_active_features_count(prompt),
+            "correct_top1": 1 if case['pathology'].lower() in [d.lower() for d in diags[:1]] else 0,
+            "correct_top5": 1 if case['pathology'].lower() in [d.lower() for d in diags[:5]] else 0
         }
         base_result.update(kwargs)
         return base_result
