@@ -274,10 +274,15 @@ def run_analysis_pipeline(
                 nl_symptoms = []
                 for code in codes:
                     if "_@_" in code:
-                        base, val_key = code.split("_@_")  # e.g., E_54 and V_112
-                        translation = evidences.get(base, {}).get("value_meaning", {}).get(val_key, {}).get("en", code)
+                        base, val_key = code.split("_@_", 1)
+                        base_map = evidences.get(base, {})
+                        question = base_map.get("question_en", base)
+                        val_map = base_map.get("value_meaning", {}).get(val_key, {})
+                        answer = val_map.get("en", val_key)
+                        translation = f"{question}: {answer}"
                     else:
-                        translation = evidences.get(code, {}).get("question_en", code)
+                        question = evidences.get(code, {}).get("question_en", code)
+                        translation = f"{question}: Yes"
                     nl_symptoms.append(translation)
                 prompt_outputs[group]["dataset_symptoms"] = "; ".join(nl_symptoms)
                 prompt_outputs[group]["diagnosis"] = case.get("diagnosis", None)
