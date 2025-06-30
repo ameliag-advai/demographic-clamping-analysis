@@ -3,6 +3,7 @@ import csv
 import datetime
 import io
 import json
+import ast
 import os
 import sys
 import pandas as pd  # for summary of results
@@ -259,15 +260,18 @@ def run_analysis_pipeline(
                 prompt_outputs[group]["dataset_sex"] = sex
                 # Convert symptom codes to natural language using evidences mapping
                 raw_symptoms = case.get("features", [])
-                # Load JSON list if symptoms stored as string
+                # Parse Python-list literal or JSON string
                 if isinstance(raw_symptoms, str):
                     try:
-                        codes = json.loads(raw_symptoms)
-                    except json.JSONDecodeError:
-                        codes = []
+                        codes = ast.literal_eval(raw_symptoms)
+                    except (ValueError, SyntaxError):
+                        try:
+                            codes = json.loads(raw_symptoms)
+                        except json.JSONDecodeError:
+                            codes = []
                 else:
                     codes = raw_symptoms
-                nl_symptoms = [evidences.get(code, code) for code in codes]
+                nl_symptoms = [evidences.get(code, {}).get("question_en", code) for code in codes]
                 prompt_outputs[group]["dataset_symptoms"] = "; ".join(nl_symptoms)
                 prompt_outputs[group]["diagnosis"] = case.get("diagnosis", None)
 
