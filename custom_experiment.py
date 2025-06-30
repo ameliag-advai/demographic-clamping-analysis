@@ -164,13 +164,13 @@ class DemographicClampingExperiment:
                 results.append(res)
 
             results_df = pd.DataFrame(results)
-            # reorder columns so prompt fields are clustered together after diagnosis
+            # reorder columns so symptoms and prompts are at the end
             columns_order = [
-                "case_id", "dataset_age", "dataset_sex", "dataset_symptoms", "diagnosis", 
-                "prompt", "prompt_age", "prompt_sex", "features_clamped", "clamping_levels", 
-                "diagnosis_1", "diagnosis_2", "diagnosis_3", "diagnosis_4", "diagnosis_5", 
-                "diagnosis_1_logits", "diagnosis_2_logits", "diagnosis_3_logits", "diagnosis_4_logits", "diagnosis_5_logits", 
+                "case_id", "dataset_age", "dataset_sex", "diagnosis",
+                "diagnosis_1", "diagnosis_2", "diagnosis_3", "diagnosis_4", "diagnosis_5",
+                "diagnosis_1_logits", "diagnosis_2_logits", "diagnosis_3_logits", "diagnosis_4_logits", "diagnosis_5_logits",
                 "top5", "top5_logits", "n_active_features", "correct_top1", "correct_top5",
+                "dataset_symptoms", "prompt", "prompt_age", "prompt_sex", "features_clamped", "clamping_levels",
             ]
             results_df = results_df[columns_order]
             results_df.to_csv(output_filepath, mode='a', header=write_header, index=False)
