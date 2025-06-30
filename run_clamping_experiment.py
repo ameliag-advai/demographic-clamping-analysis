@@ -33,6 +33,13 @@ def parse_args():
 
 def main():
     args = parse_args()
+    # Handle device fallback if CUDA unavailable
+    if args.device == 'cuda':
+        import torch
+        if not torch.cuda.is_available():
+            print("⚠️ CUDA not available, falling back to CPU.")
+            args.device = 'cpu'
+
 
     # Load model and SAE
     model, sae = load_model_and_sae(device=args.device)
