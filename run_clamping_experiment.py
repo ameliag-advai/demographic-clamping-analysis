@@ -33,13 +33,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-    # Handle device fallback if CUDA unavailable
-    if args.device == 'cuda':
-        import torch
-        if not torch.cuda.is_available():
-            print("⚠️ CUDA not available, falling back to CPU.")
-            args.device = 'cpu'
-
 
     # Load model and SAE
     model, sae = load_model_and_sae(device=args.device)
@@ -51,7 +44,9 @@ def main():
     # Run demographic clamping experiment using custom experiment class
     # Load patient data
     cases_df = load_patient_data(args.patient_file)
-    exp = DemographicClampingExperiment(model, sae, device=args.device)
+    exp = DemographicClampingExperiment(model, sae, device=args.device, 
+                                      conditions_json_path=args.conditions,
+                                      evidences_json_path=args.evidences)
     exp.run_experiment(cases_df, output_name, num_cases=args.num_cases)
 
     print(f"✅ Demographic clamping experiment completed. Results saved to {output_name}")

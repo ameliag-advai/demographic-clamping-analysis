@@ -7,7 +7,10 @@ import json
 from tqdm import tqdm
 import numpy as np
 import os
-from src.advai.analysis.constants_v2 import (
+from src.advai.data.io import load_patient_data
+from src.advai.prompts.builder import PromptBuilder
+from src.advai.analysis.analyse import load_diagnosis_list, score_diagnoses
+from src.advai.features.constants import (
     MALE_FEATURES_WITH_DIRECTIONS,
     FEMALE_FEATURES_WITH_DIRECTIONS,
     YOUNG_FEATURES_WITH_DIRECTIONS,
@@ -16,10 +19,14 @@ from src.advai.analysis.constants_v2 import (
 )
 
 class DemographicClampingExperiment:
-    def __init__(self, model, sae, device):
+    def __init__(self, model, sae, device, conditions_json_path, evidences_json_path):
         self.model = model
         self.sae = sae
         self.device = device
+        
+        # Load diagnosis list and prompt builder
+        self.diagnosis_list = load_diagnosis_list(conditions_json_path)
+        self.prompt_builder = PromptBuilder(evidences_json_path)
         self.feature_sets = {
             "male": MALE_FEATURES_WITH_DIRECTIONS,
             "female": FEMALE_FEATURES_WITH_DIRECTIONS,
@@ -104,19 +111,29 @@ class DemographicClampingExperiment:
         return resid - original_sae_out + modified_sae_out
 
     def run_inference_with_clamping(self, prompt, feature_diff_vector, clamp_level=1):
-        self.model.reset_hooks()
-        if feature_diff_vector is not None and feature_diff_vector.abs().sum() > 0:
-            hook_fn = lambda resid, hook: self.clamping_hook(resid, hook, feature_diff_vector, clamp_level)
-            self.model.add_hook("blocks.12.hook_resid_post", hook_fn)
+        # Use proper diagnosis scoring instead of raw tokens
+        clamping = feature_diff_vector is not None and feature_diff_vector.abs().sum() > 0
+        clamp_features = feature_diff_vector if clamping else None
         
-        tokens = self.model.to_tokens(prompt).to(self.device)
-        with torch.no_grad():
-            logits = self.model(tokens)
+        # Score all diagnoses against the prompt
+        dx_scores, _ = score_diagnoses(
+            prompt=prompt,
+            group="clamped",  # placeholder group name
+            diagnosis_list=self.diagnosis_list,
+            model=self.model,
+            sae=self.sae,
+            clamping=clamping,
+            clamp_features=clamp_features,
+            clamp_value=clamp_level,
+            case_id=0  # placeholder case_id
+        )
         
-        top_k_logits, top_k_indices = torch.topk(logits[0, -1], 5)
-        top_k_tokens = [self.model.to_string(i) for i in top_k_indices]
+        # Sort by score and get top 5
+        dx_scores.sort(key=lambda x: x[1], reverse=True)
+        top_5_diagnoses = [dx[0] for dx in dx_scores[:5]]
+        top_5_scores = [dx[1] for dx in dx_scores[:5]]
         
-        return top_k_tokens, top_k_logits.cpu().tolist()
+        return top_5_diagnoses, top_5_scores
 
     def get_active_features_count(self, text):
         tokens = self.model.to_tokens(text).to(self.device)
