@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Safe runner for the production bias analysis experiment.
-Uses the original alethia data files and generates results with unique datetime stamps.
+Simple runner for the production bias analysis experiment.
+Uses the original alethia data files and generates results in the original format.
 """
 
 import os
 import sys
-from datetime import datetime
 
 # Add the project root to the path
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -33,17 +32,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    # Generate unique timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # Create unique output suffix combining all identifiers
-    if args.output_suffix:
-        unique_suffix = f"{args.output_suffix}_{timestamp}_batch{args.batch_id}_cases{args.skip_cases}to{args.skip_cases + args.num_cases - 1}"
-    else:
-        unique_suffix = f"batch{args.batch_id}_{timestamp}_cases{args.skip_cases}to{args.skip_cases + args.num_cases - 1}"
-    
-    print(f"🔒 Unique output suffix: {unique_suffix}")
-    
     # Use the available data files
     patient_file = args.patient_data
     conditions_file = args.conditions
@@ -68,18 +56,17 @@ if __name__ == "__main__":
         "--skip-cases", str(args.skip_cases),
         "--device", args.device,
         "--batch-id", str(args.batch_id),
-        "--output-suffix", unique_suffix
+        "--output-suffix", args.output_suffix
     ]
     
     print("🚀 Starting production bias analysis with alethia data...")
     print(f"📊 Processing {args.num_cases} cases on {args.device}")
     if args.skip_cases > 0:
         print(f"⏭️ Skipping first {args.skip_cases} cases")
-    print(f"🔢 Batch ID: {args.batch_id}")
+    if args.batch_id > 1:
+        print(f"🔢 Batch ID: {args.batch_id}")
     print(f"📁 Patient data: {patient_file}")
     print(f"📁 Conditions: {conditions_file}")
-    print(f"📁 Output directory: {os.getcwd()}")
-    print(f"🏷️ Files will be saved with suffix: {unique_suffix}")
     
     main(patient_file, conditions_file, args.num_cases, args.device, 
-         args.skip_cases, args.batch_id, unique_suffix)
+         args.skip_cases, args.batch_id, args.output_suffix)
