@@ -8,7 +8,8 @@ from datetime import datetime
 import torch
 
 from src.advai.models.loader import load_model_and_sae
-from src.advai.analysis.pipeline import run_analysis_pipeline
+from custom_experiment import DemographicClampingExperiment
+from src.advai.data.io import load_patient_data
 
 
 def parse_args():
@@ -40,17 +41,11 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_name = args.output or f"clamping_results_{timestamp}.csv"
 
-    # Run pipeline
-    run_analysis_pipeline(
-        patient_data_path=args.patient_file,
-        conditions_json_path=args.conditions,
-        evidences_json_path=args.evidences,
-        model=model,
-        sae=sae,
-        num_cases=args.num_cases,
-        start_case=args.start_case,
-        output_name=output_name
-    )
+    # Run demographic clamping experiment using custom experiment class
+    # Load patient data
+    cases_df = load_patient_data(args.patient_file)
+    exp = DemographicClampingExperiment(model, sae, device=args.device)
+    exp.run_experiment(cases_df, output_name, num_cases=args.num_cases)
 
     print(f"✅ Demographic clamping experiment completed. Results saved to {output_name}")
 
