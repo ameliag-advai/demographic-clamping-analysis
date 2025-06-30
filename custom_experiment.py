@@ -95,6 +95,9 @@ class DemographicClampingExperiment:
         return diff_vector.unsqueeze(0).unsqueeze(0)
 
     def clamping_hook(self, resid, hook, feature_diff_vector, clamp_level=1):
+        # ensure feature_diff_vector on same device as resid
+        if feature_diff_vector.device != resid.device:
+            feature_diff_vector = feature_diff_vector.to(resid.device)
         original_activations = self.sae.encode(resid)
         modified_activations = original_activations + (feature_diff_vector * clamp_level)
         modified_sae_out = self.sae.decode(modified_activations)
