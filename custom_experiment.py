@@ -135,26 +135,35 @@ class DemographicClampingExperiment:
             prompt1, _ = self.prompt_builder.build_prompts(case, i, ("age", "sex"))
             diag1, logits1 = self.run_inference_with_clamping(prompt1, None)
             res1 = self.format_result(i, case, symptoms, prompt1, diag1, logits1, prompt_age=case['age'], prompt_sex=case_sex)
-            
+
+            results = [res1]
+            clamp_levels = [1, 5, 10]
+
             # Scenario 2: Age in prompt, sex clamped
             prompt2, _ = self.prompt_builder.build_prompts(case, i, ("age",))
             sex_features = self.get_feature_diff_vector({'sex': case_sex})
-            diag2, logits2 = self.run_inference_with_clamping(prompt2, sex_features)
-            res2 = self.format_result(i, case, symptoms, prompt2, diag2, logits2, prompt_age=case['age'], features_clamped='sex', clamping_levels='1')
+            for level in clamp_levels:
+                diag, logits = self.run_inference_with_clamping(prompt2, sex_features, clamp_level=level)
+                res = self.format_result(i, case, symptoms, prompt2, diag, logits, prompt_age=case['age'], features_clamped='sex', clamping_levels=str(level))
+                results.append(res)
 
             # Scenario 3: Sex in prompt, age group clamped
             prompt3, _ = self.prompt_builder.build_prompts(case, i, ("sex",))
             age_features = self.get_feature_diff_vector({'age_group': case_age_group})
-            diag3, logits3 = self.run_inference_with_clamping(prompt3, age_features)
-            res3 = self.format_result(i, case, symptoms, prompt3, diag3, logits3, prompt_sex=case_sex, features_clamped='age_group', clamping_levels='1')
+            for level in clamp_levels:
+                diag, logits = self.run_inference_with_clamping(prompt3, age_features, clamp_level=level)
+                res = self.format_result(i, case, symptoms, prompt3, diag, logits, prompt_sex=case_sex, features_clamped='age_group', clamping_levels=str(level))
+                results.append(res)
 
             # Scenario 4: No demo info, age and sex clamped
             prompt4, _ = self.prompt_builder.build_prompts(case, i, tuple())
             combined_features = self.get_feature_diff_vector({'sex': case_sex, 'age_group': case_age_group})
-            diag4, logits4 = self.run_inference_with_clamping(prompt4, combined_features)
-            res4 = self.format_result(i, case, symptoms, prompt4, diag4, logits4, features_clamped='age_group, sex', clamping_levels='1')
+            for level in clamp_levels:
+                diag, logits = self.run_inference_with_clamping(prompt4, combined_features, clamp_level=level)
+                res = self.format_result(i, case, symptoms, prompt4, diag, logits, features_clamped='age_group, sex', clamping_levels=str(level))
+                results.append(res)
 
-            results_df = pd.DataFrame([res1, res2, res3, res4])
+            results_df = pd.DataFrame(results)
             results_df.to_csv(output_filepath, mode='a', header=write_header, index=False)
             
             write_header = False
