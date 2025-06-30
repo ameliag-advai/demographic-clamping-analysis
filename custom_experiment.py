@@ -126,6 +126,7 @@ class DemographicClampingExperiment:
 
     def run_experiment(self, cases, output_filepath, num_cases=100):
         import os
+        cases = cases.rename(columns=lambda x: x.lower())
         write_header = not os.path.exists(output_filepath)
 
         for i, case in tqdm(cases.head(num_cases).iterrows(), total=num_cases):
