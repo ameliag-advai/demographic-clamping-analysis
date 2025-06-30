@@ -6,6 +6,7 @@ from src.advai.data.prompt_builder import PromptBuilder
 import json
 from tqdm import tqdm
 import numpy as np
+import os
 from src.advai.analysis.constants_v2 import (
     MALE_FEATURES_WITH_DIRECTIONS,
     FEMALE_FEATURES_WITH_DIRECTIONS,
@@ -30,9 +31,10 @@ class DemographicClampingExperiment:
         # Pre-calculate feature difference vectors
         self._calculate_feature_diffs()
 
-        with open('/Users/amelia/bbb/demographic-clamping-analysis/release_evidences.json') as f:
+        project_root = os.path.abspath(os.path.dirname(__file__))
+        with open(os.path.join(project_root, 'release_evidences.json'), 'r') as f:
             evidences = json.load(f)
-        with open('/Users/amelia/bbb/demographic-clamping-analysis/release_conditions.json') as f:
+        with open(os.path.join(project_root, 'release_conditions.json'), 'r') as f:
             conditions = json.load(f)
 
         self.prompt_builder = PromptBuilder(
